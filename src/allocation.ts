@@ -6,6 +6,23 @@ type ShiftResults = {
   balance: number;
 };
 
+type AllocationBar = {
+  labelText: string;
+  barColor: string;
+  dataFunction: (shiftResults: ShiftResults) => number;
+};
+
+const allocationBarLabelColor: string = "#233e43";
+const allocationBars: AllocationBar[] = [{
+  labelText: "Production",
+  barColor: "#27766b",
+  dataFunction: (shiftResults: ShiftResults) => shiftResults.production,
+}, {
+  labelText: "Consumption",
+  barColor: "#a44d23",
+  dataFunction: (shiftResults: ShiftResults) => shiftResults.consumption,
+}];
+
 const canvas = document.querySelector<HTMLCanvasElement>("#allocation-canvas")!;
 const ctx = canvas.getContext("2d")!;
 const readout = document.querySelector<HTMLParagraphElement>(
@@ -34,13 +51,23 @@ function updateAllocationUI(shiftResults: ShiftResults) {
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
   ctx.fillText(`Producers: ${allocatedProducers} / 6`, 18, 76);
-  ctx.fillText(`Production: ${shiftResults.production}`, 18, 102);
-  ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, shiftResults.production * 14, 20);
-  ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${shiftResults.consumption}`, 18, 154);
-  ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, shiftResults.consumption * 14, 20);
+
+  for (const [index, allocationBar] of allocationBars.entries()) {
+    ctx.fillStyle = allocationBarLabelColor;
+    ctx.fillText(
+      `${allocationBar.labelText}: ${allocationBar.dataFunction(shiftResults)}`,
+      18,
+      102 + (index * 52),
+    );
+    ctx.fillStyle = allocationBar.barColor;
+    ctx.fillRect(
+      18,
+      110 + (index * 52),
+      allocationBar.dataFunction(shiftResults) * 14,
+      20,
+    );
+  }
+
   readout.textContent =
     `Assigned: ${allocatedProducers}/6 · Production: ${shiftResults.production} · Consumption: ${shiftResults.consumption} · Balance: ${
       shiftResults.balance > 0 ? "+" : ""
