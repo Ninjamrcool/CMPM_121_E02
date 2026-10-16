@@ -1,10 +1,12 @@
 export {};
 
 interface Command {
+  label: string;
   execute(): void;
 }
 
 const moveForward: Command = {
+  label: "Forward",
   execute() {
     x += movementDirections[direction].xOffset;
     y += movementDirections[direction].yOffset;
@@ -14,10 +16,48 @@ const moveForward: Command = {
 };
 
 const rotateRight: Command = {
+  label: "Right",
   execute() {
     direction = (direction + 1) % movementDirections.length;
   },
 };
+
+interface CommandQueue {
+  enqueue(command: Command): void;
+  executeAllCommands(): void;
+  clear(): void;
+}
+
+class MovementCommandQueue {
+  #commands: Command[] = [];
+
+  enqueue(command: Command) {
+    this.#commands.push(command);
+    this.#updateQueueStatus();
+  }
+
+  executeAllCommands() {
+    this.#commands.forEach((c) => c.execute());
+    this.#commands = [];
+    this.#updateQueueStatus();
+  }
+
+  clear() {
+    this.#commands = [];
+    this.#updateQueueStatus();
+  }
+
+  #updateQueueStatus() {
+    pendingCommands.replaceChildren();
+
+    for (const command of this.#commands) {
+      const listElement = document.createElement("li");
+      listElement.textContent = command.label;
+      pendingCommands.appendChild(listElement);
+    }
+  }
+}
+const movementCommandQueue: CommandQueue = new MovementCommandQueue();
 
 type MovementDirection = {
   heading: string;
@@ -56,6 +96,9 @@ function clampPosition() {
 const canvas = document.querySelector<HTMLCanvasElement>("#rover-canvas")!;
 const ctx = canvas.getContext("2d")!;
 const readout = document.querySelector<HTMLParagraphElement>("#rover-readout")!;
+const pendingCommands = document.querySelector<HTMLUListElement>(
+  "#rover-pending",
+)!;
 let x = 2;
 let y = 2;
 let direction = 0;
@@ -85,17 +128,25 @@ function drawRover() {
 }
 
 document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
-  moveForward.execute();
+  movementCommandQueue.enqueue(moveForward);
   drawRover();
 };
 document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
-  rotateRight.execute();
+  movementCommandQueue.enqueue(rotateRight);
   drawRover();
 };
 document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
+  movementCommandQueue.clear();
   x = 2;
   y = 2;
   direction = 0;
+  drawRover();
+};
+document.querySelector<HTMLButtonElement>("#rover-clear")!.onclick = () => {
+  movementCommandQueue.clear();
+};
+document.querySelector<HTMLButtonElement>("#rover-run")!.onclick = () => {
+  movementCommandQueue.executeAllCommands();
   drawRover();
 };
 drawRover();
