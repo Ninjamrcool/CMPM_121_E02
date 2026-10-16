@@ -64,7 +64,6 @@ function setCount(next: number) {
   const bounded = Math.max(0, Math.min(maxShieldCharge, next));
   if (bounded === shieldCharge) return;
   shieldCharge = bounded;
-  if (panel) updateStats();
 
   eventHandler.dispatchEvent(new Event("count-changed"));
 }
@@ -80,14 +79,26 @@ document.querySelector<HTMLButtonElement>("#counter-reset")!.onclick = () => {
 };
 document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
   if (panel) return;
+
   panel = document.createElement("p");
   host.append(panel);
   renderStats(getShieldStatus());
+
+  eventHandler.addEventListener(
+    "count-changed",
+    updateStats,
+  );
 };
 document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
   if (!panel) return;
+
   panel.remove();
   panel = null;
+
+  eventHandler.removeEventListener(
+    "count-changed",
+    updateStats,
+  );
 };
 
 eventHandler.addEventListener(
