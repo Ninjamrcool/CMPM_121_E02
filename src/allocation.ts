@@ -1,5 +1,11 @@
 export {};
 
+type ShiftResults = {
+  production: number;
+  consumption: number;
+  balance: number;
+};
+
 const canvas = document.querySelector<HTMLCanvasElement>("#allocation-canvas")!;
 const ctx = canvas.getContext("2d")!;
 const readout = document.querySelector<HTMLParagraphElement>(
@@ -8,19 +14,15 @@ const readout = document.querySelector<HTMLParagraphElement>(
 
 let allocatedProducers = 2;
 
-function calculateShiftResults() {
+function calculateShiftResults(): ShiftResults {
   const production = allocatedProducers * 3;
   const consumption = 6;
   const balance = production - consumption;
 
-  updateAllocationUI(production, consumption, balance);
+  return { production: production, consumption: consumption, balance: balance };
 }
 
-function updateAllocationUI(
-  production: number,
-  consumption: number,
-  balance: number,
-) {
+function updateAllocationUI(shiftResults: ShiftResults) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let i = 0; i < 6; i++) {
     ctx.fillStyle = i < allocatedProducers ? "#27766b" : "#c9d2c9";
@@ -32,31 +34,31 @@ function updateAllocationUI(
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
   ctx.fillText(`Producers: ${allocatedProducers} / 6`, 18, 76);
-  ctx.fillText(`Production: ${production}`, 18, 102);
+  ctx.fillText(`Production: ${shiftResults.production}`, 18, 102);
   ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, production * 14, 20);
+  ctx.fillRect(18, 110, shiftResults.production * 14, 20);
   ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${consumption}`, 18, 154);
+  ctx.fillText(`Consumption: ${shiftResults.consumption}`, 18, 154);
   ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, consumption * 14, 20);
+  ctx.fillRect(18, 162, shiftResults.consumption * 14, 20);
   readout.textContent =
-    `Assigned: ${allocatedProducers}/6 · Production: ${production} · Consumption: ${consumption} · Balance: ${
-      balance > 0 ? "+" : ""
-    }${balance}`;
+    `Assigned: ${allocatedProducers}/6 · Production: ${shiftResults.production} · Consumption: ${shiftResults.consumption} · Balance: ${
+      shiftResults.balance > 0 ? "+" : ""
+    }${shiftResults.balance}`;
 }
 
 document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick = () => {
   allocatedProducers = Math.max(0, allocatedProducers - 1);
-  calculateShiftResults();
+  updateAllocationUI(calculateShiftResults());
 };
 document.querySelector<HTMLButtonElement>("#allocation-more")!.onclick = () => {
   allocatedProducers = Math.min(6, allocatedProducers + 1);
-  calculateShiftResults();
+  updateAllocationUI(calculateShiftResults());
 };
 document.querySelector<HTMLButtonElement>("#allocation-reset")!.onclick =
   () => {
     allocatedProducers = 2;
-    calculateShiftResults();
+    updateAllocationUI(calculateShiftResults());
   };
 
-calculateShiftResults();
+updateAllocationUI(calculateShiftResults());
